@@ -76,8 +76,7 @@ class PttWebCrawler(object):
                         href = div.find('a')['href']
                         link = self.PTT_URL + href
                         article_id = re.sub('\.html', '', href.split('/')[-1])
-                        if div == divs[-1] and i == end-start:  # last div of last page
-                            yield self.parse(link, article_id, board)
+                        yield self.parse(link, article_id, board)
                     except:
                         pass
                 time.sleep(0.1)
