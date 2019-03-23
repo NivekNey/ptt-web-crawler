@@ -58,7 +58,6 @@ class PttWebCrawler(object):
 
     def parse_articles(self, start, end, board, path='.', timeout=3):
         if path == "memory":
-            from multiprocessing import Pool
             for i in range(end-start+1):
                 index = start + i
                 print('Processing index:', str(index))
@@ -71,15 +70,15 @@ class PttWebCrawler(object):
                     continue
                 soup = BeautifulSoup(resp.text, 'html.parser')
                 divs = soup.find_all("div", "r-ent")
-                def div_op(div):
-                    # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
-                    href = div.find('a')['href']
-                    link = self.PTT_URL + href
-                    article_id = re.sub('\.html', '', href.split('/')[-1])
-                    return self.parse(link, article_id, board, to_str=False)
-                with Pool() as p:
-                    for r in p.imap_unordered(div_op, divs):
-                        yield r
+                for div in divs:
+                    try:
+                        # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
+                        href = div.find('a')['href']
+                        link = self.PTT_URL + href
+                        article_id = re.sub('\.html', '', href.split('/')[-1])
+                        yield self.parse(link, article_id, board, to_str=False)
+                    except:
+                        pass
                 time.sleep(0.1)
         else:
             filename = board + '-' + str(start) + '-' + str(end) + '.json'
