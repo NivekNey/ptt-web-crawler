@@ -57,6 +57,31 @@ class PttWebCrawler(object):
                 self.parse_article(article_id, board)
 
     def parse_articles(self, start, end, board, path='.', timeout=3):
+        if path == "memory":
+            for i in range(end-start+1):
+                index = start + i
+                print('Processing index:', str(index))
+                resp = requests.get(
+                    url = self.PTT_URL + '/bbs/' + board + '/index' + str(index) + '.html',
+                    cookies={'over18': '1'}, verify=VERIFY, timeout=timeout
+                )
+                if resp.status_code != 200:
+                    print('invalid url:', resp.url)
+                    continue
+                soup = BeautifulSoup(resp.text, 'html.parser')
+                divs = soup.find_all("div", "r-ent")
+                for div in divs:
+                    try:
+                        # ex. link would be <a href="/bbs/PublicServan/M.1127742013.A.240.html">Re: [問題] 職等</a>
+                        href = div.find('a')['href']
+                        link = self.PTT_URL + href
+                        article_id = re.sub('\.html', '', href.split('/')[-1])
+                        if div == divs[-1] and i == end-start:  # last div of last page
+                            yield self.parse(link, article_id, board)
+                    except:
+                        pass
+                time.sleep(0.1)
+        else:
             filename = board + '-' + str(start) + '-' + str(end) + '.json'
             filename = os.path.join(path, filename)
             self.store(filename, u'{"articles": [', 'w')
