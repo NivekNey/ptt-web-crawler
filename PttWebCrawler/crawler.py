@@ -76,7 +76,7 @@ class PttWebCrawler(object):
                         href = div.find('a')['href']
                         link = self.PTT_URL + href
                         article_id = re.sub('\.html', '', href.split('/')[-1])
-                        yield self.parse(link, article_id, board)
+                        yield self.parse(link, article_id, board, to_str=False)
                     except:
                         pass
                 time.sleep(0.1)
@@ -120,7 +120,7 @@ class PttWebCrawler(object):
         return filename
 
     @staticmethod
-    def parse(link, article_id, board, timeout=3):
+    def parse(link, article_id, board, timeout=3, to_str=True):
         print('Processing article:', article_id)
         resp = requests.get(url=link, cookies={'over18': '1'}, verify=VERIFY, timeout=timeout)
         if resp.status_code != 200:
@@ -207,7 +207,10 @@ class PttWebCrawler(object):
             'messages': messages
         }
         # print 'original:', d
-        return json.dumps(data, sort_keys=True, ensure_ascii=False)
+        if to_str:
+            return json.dumps(data, sort_keys=True, ensure_ascii=False)
+        else:
+            return data
 
     @staticmethod
     def getLastPage(board, timeout=3):
